@@ -42,30 +42,3 @@ WyamSettings CreateSettings(bool preview)
         Watch = preview
     };
 }
-
-int GitCommand(string command, string workingDirectory = null) {
-    Information("git " + command);
-    var settings = new ProcessSettings { Arguments = command };
-    if (workingDirectory != null) settings.WorkingDirectory = workingDirectory;
-    return StartProcess("git", settings);
-}
-
-int GitClonePages() {
-    if (DirectoryExists("./pages")) {
-        return 0;
-    }
-    return GitCommand("clone " + gitPagesRepo + " -b " + gitPagesBranch + " pages");
-}
-
-int GitCommitPages() {
-    var result = GitCommand("add .", "./pages");
-    if (result != 0) {
-        return result;
-    }
-    result = GitCommand("commit -m \"Publishing pages " + DateTime.Now + "\"", "./pages");
-    return result;
-}
-
-int GitPushPages() {
-    return GitCommand("push", "./pages");
-}
