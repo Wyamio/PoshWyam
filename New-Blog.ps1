@@ -55,7 +55,7 @@ GlobalMetadata["Intro"] = "$Introduction";
 "@
         Set-Content -Path config.wyam -Value $content
         Copy-Item -Path (Join-Path $ModuleRoot about.md) -Destination $input
-        #New-BlogPost -Title "First Post" -Tag Introduction
+        New-BlogPost -Title "First Post" -Tag Introduction
     }
     
     end {

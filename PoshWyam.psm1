@@ -5,7 +5,7 @@ $ModuleRoot = $PSScriptRoot
 #. $ModuleRoot\Get-BlogPostsLocation.ps1
 #. $ModuleRoot\Get-WyamRoot.ps1
 . $ModuleRoot\New-Blog.ps1
-#. $ModuleRoot\New-BlogPost.ps1
+. $ModuleRoot\New-BlogPost.ps1
 #. $ModuleRoot\Set-BlogPostPublishedDate.ps1
 
 # Private cmdlets
