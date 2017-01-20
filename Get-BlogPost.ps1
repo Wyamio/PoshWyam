@@ -33,6 +33,19 @@ function Get-BlogPost {
     }
     
     process {
+        @(
+            Get-ChildItem -Path (Get-BlogPostsLocation) -Filter *.md | Get-BlogObject
+            Get-ChildItem -Path (Get-BlogPostsLocation -Draft) -Filter *.md | Get-BlogObject -Draft
+        ) | Where-Object {
+            $post = $_
+            if ($PSBoundParameters.ContainsKey('Title') -and -not ($Title | Test-Any { $post.Title -like $_ })) {
+                $false
+            } elseif ($StartDate -gt $post.Published -or $EndDate -lt $post.Published) {
+                $false
+            } else {
+                $true
+            }
+        } | Sort-Object Published
     }
     
     end {

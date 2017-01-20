@@ -10,6 +10,8 @@ $ModuleRoot = $PSScriptRoot
 #. $ModuleRoot\Set-BlogPostPublishedDate.ps1
 
 # Private cmdlets
+. $ModuleRoot\Get-BlogObject.ps1
 . $ModuleRoot\Get-BlogPostName.ps1
 . $ModuleRoot\Install-Wyam.ps1
 . $ModuleRoot\Join-Paths.ps1
+. $ModuleRoot\Test-Any.ps1

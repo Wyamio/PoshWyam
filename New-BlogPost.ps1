@@ -29,10 +29,17 @@ function New-BlogPost {
     }
     
     process {
+        # Get directory
         $parms = @{ 'Root' = $Root }
+        if ($Draft) {
+            $parms['Draft'] = $True
+        }
         $posts = Get-BlogPostsLocation @parms
+
+        # Get path to post to create
         $path = Join-Path $posts (Get-BlogPostName $Title)
-        Write-Verbose $path
+
+        # Create post
         $content = @"
 ---
 Title: "${Title}"
@@ -43,6 +50,7 @@ Tags: [$(($Tag | % { """$_""" }) -join ', ')]
 # ${Title}
 "@
         Set-Content -Path $path -Value $content
+        Resolve-Path $path
     }
     
     end {

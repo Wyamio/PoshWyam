@@ -9,14 +9,21 @@ function Get-BlogPostsLocation {
     param (
         # The Wyam project root. If not specified the root is located by searching from the current location up.
         [string]
-        $Root = (Get-WyamRoot)
+        $Root = (Get-WyamRoot),
+
+        [switch]
+        $Drafts
     )
     
     begin {
     }
     
     process {
-        Resolve-Path (Join-Paths $Root input,posts)
+        if ($Drafts) {
+            Join-Path $Root drafts
+        } else {
+            Join-Paths $Root input,posts
+        }
     }
     
     end {

@@ -40,13 +40,22 @@ function New-Blog {
             throw "Path '$Path' already exists."
         }
 
+        # Create directories
         $Path = New-Item -Path $Path -ItemType Directory
+        $drafts = New-Item -Path (Join-Path $Path drafts) -ItemType Directory
         $input = New-Item -Path (Join-Path $Path input) -ItemType Directory
         $posts = New-Item -Path (Join-Path $input posts) -ItemType Directory
+
         Set-Location -Path $Path
+
+        # Create build.ps1
         Invoke-WebRequest http://cakebuild.net/download/bootstrapper/windows -OutFile build.ps1
         Set-Content -Path build.ps1 -Value (Get-Content -Path build.ps1 | %{ $_ -replace 'build.cake','wyam.cake' })
-        Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | %{ $_ -replace '%THEME%',$Theme })
+
+        # Create wyam.cake
+        Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | ForEach-Object { $_ -replace '%THEME%',$Theme })
+
+        # Create config.wyam
         $content = @"
 Settings.Host = "$Host";
 GlobalMetadata["Title"] = "$Title";
@@ -54,6 +63,8 @@ GlobalMetadata["Description"] = "$Description";
 GlobalMetadata["Intro"] = "$Introduction";
 "@
         Set-Content -Path config.wyam -Value $content
+
+        # Create default site content
         Copy-Item -Path (Join-Path $ModuleRoot about.md) -Destination $input
         New-BlogPost -Title "First Post" -Tag Introduction
     }
