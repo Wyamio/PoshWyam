@@ -41,7 +41,7 @@
                                 <PropertyName>Draft</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
-                                <PropertyName>Path</PropertyName>
+                                <PropertyName>Name</PropertyName>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>

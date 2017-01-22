@@ -17,8 +17,9 @@ function Get-BlogObject {
         $Path | ForEach-Object {
             $post = Resolve-Path $_ -ErrorAction Stop
             $props = @{
-                'Path' = $post
-                Draft = $Draft
+                'Path' = $post.Path
+                'Name' = Split-Path $post -Leaf
+                'Draft' = $Draft
             }
             $content = Get-Content $post
             $content | ForEach-Object {
