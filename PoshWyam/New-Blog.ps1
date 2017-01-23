@@ -7,24 +7,24 @@
 function New-Blog {
     [CmdletBinding()]
     param (
-        # The path of the project to create.
-        [Parameter(Mandatory = $True)]
-        $Path,
-
-        # The host name where the blog will be published to.
-        [Parameter(Mandatory = $True)]
-        $Host,
-
         # The blog title.
-        [Parameter(Mandatory = $True)]
+        [Parameter(Position = 0, Mandatory = $True)]
         $Title,
 
+        # The host name where the blog will be published to.
+        [Parameter(Position = 1, Mandatory = $True)]
+        $Host,
+
+        # The path of the project to create.
+        [Parameter(Mandatory = $False)]
+        $Path,
+
         # The description of your blog (usually placed on the home page).
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $False)]
         $Description,
 
         # A short introduction to your blog (usually placed on the home page under the description). 
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $False)]
         $Introduction,
 
         # The theme to use.
@@ -36,6 +36,10 @@ function New-Blog {
     }
     
     process {
+        if (-not $PSBoundParameters.ContainsKey('Path')) {
+            $Path = Join-Path (Get-Location) (Get-FileName $Title)
+        }
+
         if (Test-Path $Path) {
             throw "Path '$Path' already exists."
         }
@@ -50,18 +54,19 @@ function New-Blog {
 
         # Create build.ps1
         Invoke-WebRequest http://cakebuild.net/download/bootstrapper/windows -OutFile build.ps1
-        Set-Content -Path build.ps1 -Value (Get-Content -Path build.ps1 | %{ $_ -replace 'build.cake','wyam.cake' })
+        Set-Content -Path build.ps1 -Value (Get-Content -Path build.ps1 | ForEach-Object { $_ -replace 'build.cake','wyam.cake' })
 
         # Create wyam.cake
         Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | ForEach-Object { $_ -replace '%THEME%',$Theme })
 
         # Create config.wyam
-        $content = @"
-Settings.Host = "$Host";
-GlobalMetadata["Title"] = "$Title";
-GlobalMetadata["Description"] = "$Description";
-GlobalMetadata["Intro"] = "$Introduction";
-"@
+        $content = @("Settings.Host = `"$Host`";", "GlobalMetadata[`"Title`"] = `"$Title`";")
+        if ($Description) {
+            $content += "GlobalMetadata[`"Description`"] = `"$Description`";"
+        }
+        if ($Introduction) {
+            $content += "GlobalMetadata[`"Intro`"] = `"$Introduction`";"
+        }
         Set-Content -Path config.wyam -Value $content
 
         # Create default site content

@@ -1,4 +1,4 @@
-function Get-BlogPostName {
+function Get-FileName {
     [CmdletBinding()]
     param (
         $Title
@@ -12,7 +12,24 @@ function Get-BlogPostName {
         $name = $name.ToLower()
         $invalid = [System.IO.Path]::GetInvalidFileNameChars()
         $regex = "[$([Regex]::Escape($invalid))]"
-        "${name}.md"
+        $name
+    }
+    
+    end {
+    }
+}
+
+function Get-BlogPostName {
+    [CmdletBinding()]
+    param (
+        $Title
+    )
+    
+    begin {
+    }
+    
+    process {
+        "$(Get-FileName $Title).md"
     }
     
     end {
