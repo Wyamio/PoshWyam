@@ -1,0 +1,22 @@
+TOPIC
+    about_PoshWyam
+
+SHORT DESCRIPTION
+    PoshWyam is a PowerShell Module used to make working with Wyam easier.
+
+LONG DESCRIPTION
+    Wyam is a highly modular and extremely configurable static content generator
+    and toolkit. PoshWyam provides PowerShell cmdlets used to make working with
+    Wyam easier.
+
+EXAMPLES
+    Examples of how to use the module or how the subject feature works in
+    practice.
+
+KEYWORDS
+    Terms or titles on which you might expect your users to search for the
+    information in this topic.
+
+SEE ALSO
+    Text-only references for further reading. Hyperlinks cannot work in the
+    Windows PowerShell console.
