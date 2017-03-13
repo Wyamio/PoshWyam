@@ -22,16 +22,29 @@ function Get-BlogObject {
                 'Draft' = $Draft
             }
             $content = Get-Content $post
+            $yaml = ''
+            $firstLine = $true
+            $inFrontMatter = $true
             $content | ForEach-Object {
-                $line = $_
-                if ($line -imatch "\s*title:(.*)") {
-                    $props.Add('Title', $Matches[1].Trim("`t `""))
-                } elseif ($line -imatch "\s*published:(.*)") {
-                    $props.Add('Published', [DateTime]($Matches[1].Trim("`t `"")))
-                } elseif ($line -imatch "\s*tags:(.*)") {
-                    $props.Add('Tags', @($Matches[1].Trim("`t []") -split ',' | ForEach-Object { $_.Trim("`t `"") }))
+                if ($inFrontMatter) {
+                    $line = $_.Trim()
+                    if ($line.Length -gt 0 -and $line -eq ('-' * $line.Length)) {
+                        if (-not $firstLine) {
+                            $inFrontMatter = $false
+                        }
+                    }
+                    else {
+                        $yaml += $line + [System.Environment]::NewLine
+                    }
+                    $firstLine = $false
                 }
+                $line = $_.Trim()
             }
+            $yaml = $yaml | ConvertFrom-Yaml
+            $props['Title'] = $yaml['Title']
+            $props['Published'] = [DateTime]($yaml['Published'])
+            $props['Tags'] = $yaml['Tags']
+            $props.Add('FrontMatter', $yaml)
             $post = New-Object -TypeName PSObject -Property $props
             $post.PSObject.TypeNames.Insert(0, 'PoshWyam.BlogPost')
             $post

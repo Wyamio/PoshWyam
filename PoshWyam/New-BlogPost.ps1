@@ -5,7 +5,7 @@
     Creates a new blog post.
 #>
 function New-BlogPost {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $True)]
     param (
         # The blog post title.
         [Parameter(Position=0, Mandatory=$True)]
@@ -44,7 +44,7 @@ function New-BlogPost {
 ---
 Title: "${Title}"
 Published: $(Get-Date)
-Tags: [$(($Tag | % { """$_""" }) -join ', ')]
+Tags: [$(($Tag | ForEach-Object { """$_""" }) -join ', ')]
 ---
 
 # ${Title}
@@ -56,5 +56,3 @@ Tags: [$(($Tag | % { """$_""" }) -join ', ')]
     end {
     }
 }
-
-Export-ModuleMember -Function New-BlogPost

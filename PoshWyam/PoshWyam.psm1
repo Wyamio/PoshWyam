@@ -14,5 +14,6 @@ $ModuleRoot = $PSScriptRoot
 . $ModuleRoot\Get-BlogObject.ps1
 . $ModuleRoot\Get-BlogPostName.ps1
 . $ModuleRoot\Install-Wyam.ps1
-. $ModuleRoot\Join-Paths.ps1
+. $ModuleRoot\Join-PathSegment.ps1
 . $ModuleRoot\Test-Any.ps1
+. $ModuleRoot\Yaml.ps1

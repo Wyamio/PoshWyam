@@ -17,7 +17,7 @@ function Get-WyamRoot {
     process {
         $path = Get-Location
         while ($path) {
-            Write-Verbose $path
+            Write-Verbose "Root: $path"
             if (Test-Path (Join-Path $path $Config)) {
                 return $path
             }
@@ -30,4 +30,3 @@ function Get-WyamRoot {
     }
 }
 
-Export-ModuleMember -Function Get-WyamRoot

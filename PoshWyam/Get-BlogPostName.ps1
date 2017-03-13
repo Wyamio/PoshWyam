@@ -1,5 +1,6 @@
 function Get-FileName {
     [CmdletBinding()]
+    [OutputType([string])]
     param (
         $Title
     )
@@ -12,7 +13,7 @@ function Get-FileName {
         $name = $name.ToLower()
         $invalid = [System.IO.Path]::GetInvalidFileNameChars()
         $regex = "[$([Regex]::Escape($invalid))]"
-        $name
+        $name -replace $regex,'-'
     }
     
     end {
@@ -21,6 +22,7 @@ function Get-FileName {
 
 function Get-BlogPostName {
     [CmdletBinding()]
+    [OutputType([string])]
     param (
         $Title
     )

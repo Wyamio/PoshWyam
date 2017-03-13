@@ -40,9 +40,11 @@ function Get-BlogPost {
             $post = $_
             if ($PSBoundParameters.ContainsKey('Title') -and -not ($Title | Test-Any { $post.Title -like $_ })) {
                 $false
-            } elseif ($StartDate -gt $post.Published -or $EndDate -lt $post.Published) {
+            }
+            elseif ($StartDate -gt $post.Published -or $EndDate -lt $post.Published) {
                 $false
-            } else {
+            }
+            else {
                 $true
             }
         } | Sort-Object Published
@@ -51,5 +53,3 @@ function Get-BlogPost {
     end {
     }
 }
-
-Export-ModuleMember -Function Get-BlogPost

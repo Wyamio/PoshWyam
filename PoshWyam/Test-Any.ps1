@@ -1,5 +1,6 @@
 Function Test-Any {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         [ScriptBlock]
         $Filter,
@@ -27,6 +28,6 @@ Function Test-Any {
     }
 
     end {
-         $false
+        $false
     }
 }

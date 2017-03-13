@@ -21,13 +21,12 @@ function Get-BlogPostsLocation {
     process {
         if ($Drafts) {
             Join-Path $Root drafts
-        } else {
-            Join-Paths $Root input,posts
+        }
+        else {
+            Join-PathSegment $Root input,posts
         }
     }
     
     end {
     }
 }
-
-Export-ModuleMember -Function Get-BlogPostsLocation

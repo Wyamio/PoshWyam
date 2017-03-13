@@ -5,7 +5,7 @@
     Scaffolds a new Wyam project for a blog, based on the Blog recipe.
 #>
 function New-Blog {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $True)]
     param (
         # The blog title.
         [Parameter(Position = 0, Mandatory = $True)]
@@ -29,7 +29,9 @@ function New-Blog {
 
         # The theme to use.
         [Parameter(Mandatory = $False)]
-        $Theme = "CleanBlog"
+        $Theme = "CleanBlog",
+
+        [switch]$CakeBuild
     )
     
     begin {
@@ -46,36 +48,31 @@ function New-Blog {
 
         # Create directories
         $Path = New-Item -Path $Path -ItemType Directory
-        $drafts = New-Item -Path (Join-Path $Path drafts) -ItemType Directory
-        $input = New-Item -Path (Join-Path $Path input) -ItemType Directory
-        $posts = New-Item -Path (Join-Path $input posts) -ItemType Directory
-
         Set-Location -Path $Path
 
-        # Create build.ps1
-        Invoke-WebRequest http://cakebuild.net/download/bootstrapper/windows -OutFile build.ps1
-        Set-Content -Path build.ps1 -Value (Get-Content -Path build.ps1 | ForEach-Object { $_ -replace 'build.cake','wyam.cake' })
-
-        # Create wyam.cake
-        Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | ForEach-Object { $_ -replace '%THEME%',$Theme })
-
-        # Create config.wyam
-        $content = @("Settings.Host = `"$Host`";", "GlobalMetadata[`"Title`"] = `"$Title`";")
+        Invoke-Wyam -Arguments 'new -r Blog'
+        [void](New-Item -Path (Join-Path $Path drafts) -ItemType Directory)
+        
+        # Update config.wyam
+        $content = @("`n#theme $Theme", "Settings[Keys.Host] = `"$Host`";", "Settings[BlogKeys.Title] = `"$Title`";")
         if ($Description) {
-            $content += "GlobalMetadata[`"Description`"] = `"$Description`";"
+            $content += "Settings[BlogKeys.Description] = `"$Description`";"
         }
         if ($Introduction) {
-            $content += "GlobalMetadata[`"Intro`"] = `"$Introduction`";"
+            $content += "Settings[BlogKeys.Intro] = `"$Introduction`";"
         }
-        Set-Content -Path config.wyam -Value $content
+        Add-Content -Path config.wyam -Value $content
 
-        # Create default site content
-        Copy-Item -Path (Join-Path $ModuleRoot about.md) -Destination $input
-        New-BlogPost -Title "First Post" -Tag Introduction
+        if ($CakeBuild) {
+            # Create build.ps1
+            Invoke-WebRequest 'http://cakebuild.net/download/bootstrapper/windows' -OutFile build.ps1
+            Set-Content -Path build.ps1 -Value (Get-Content -Path build.ps1 | ForEach-Object { $_ -replace 'build.cake','wyam.cake' })
+
+            # Create wyam.cake
+            Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | ForEach-Object { $_ -replace '%THEME%',$Theme })
+        }
     }
     
     end {
     }
 }
-
-Export-ModuleMember -Function New-Blog
