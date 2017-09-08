@@ -50,7 +50,7 @@ function New-Blog {
         $Path = New-Item -Path $Path -ItemType Directory
         Set-Location -Path $Path
 
-        Invoke-Wyam -Arguments 'new -r Blog'
+        Invoke-Wyam -New -Recipe Blog
         [void](New-Item -Path (Join-Path $Path drafts) -ItemType Directory)
         
         # Update config.wyam

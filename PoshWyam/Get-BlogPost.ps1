@@ -3,7 +3,7 @@
     Gets the blog posts in a Wyam blog.
 
 .DESCRIPTION
-    Gets the blog posts in a Wyam blog. Posts are assumed to be located in input/posts.
+    Gets the blog posts in a Wyam blog. Posts are assumed to be located in ./input/posts and drafts in ./drafts.
 #>
 function Get-BlogPost {
     [CmdletBinding()]

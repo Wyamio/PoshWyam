@@ -11,6 +11,7 @@ function Get-BlogPostsLocation {
         [string]
         $Root = (Get-WyamRoot),
 
+        # Specifies that draft posts should be located instead.
         [switch]
         $Drafts
     )
@@ -20,10 +21,10 @@ function Get-BlogPostsLocation {
     
     process {
         if ($Drafts) {
-            Join-Path $Root drafts
+            Resolve-Path (Join-Path $Root drafts)
         }
         else {
-            Join-PathSegment $Root input,posts
+            Resolve-Path (Join-PathSegment $Root input,posts)
         }
     }
     

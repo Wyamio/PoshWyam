@@ -1,4 +1,5 @@
 function Get-BlogObject {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "yaml")]
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline=$True, ValueFromPipelineByPropertyName=$True)]
@@ -38,13 +39,13 @@ function Get-BlogObject {
                     }
                     $firstLine = $false
                 }
-                $line = $_.Trim()
             }
-            $yaml = $yaml | ConvertFrom-Yaml
-            $props['Title'] = $yaml['Title']
-            $props['Published'] = [DateTime]($yaml['Published'])
-            $props['Tags'] = $yaml['Tags']
-            $props.Add('FrontMatter', $yaml)
+            $frontMatter = $yaml | ConvertFrom-Yaml
+            $frontMatter.Tags = @($frontMatter.Tags)
+            $props['Title'] = $frontMatter.Title
+            $props['Published'] = [DateTime]($frontMatter.Published)
+            $props['Tags'] = $frontMatter.Tags
+            $props.Add('FrontMatter', $frontMatter)
             $post = New-Object -TypeName PSObject -Property $props
             $post.PSObject.TypeNames.Insert(0, 'PoshWyam.BlogPost')
             $post

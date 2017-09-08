@@ -1,24 +1,4 @@
-function Get-FileName {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param (
-        $Title
-    )
-    
-    begin {
-    }
-    
-    process {
-        $name = $Title -replace '\s+','-'
-        $name = $name.ToLower()
-        $invalid = [System.IO.Path]::GetInvalidFileNameChars()
-        $regex = "[$([Regex]::Escape($invalid))]"
-        $name -replace $regex,'-'
-    }
-    
-    end {
-    }
-}
+$invalidPostNameChars = [RegEx]::Escape([System.IO.Path]::GetInvalidFileNameChars() + @(' ',"`t","`n"))
 
 function Get-BlogPostName {
     [CmdletBinding()]
@@ -31,7 +11,8 @@ function Get-BlogPostName {
     }
     
     process {
-        "$(Get-FileName $Title).md"
+        $name = $Title -replace "[$invalidPostNameChars]",'-'
+        "$($name.ToLower()).md"
     }
     
     end {

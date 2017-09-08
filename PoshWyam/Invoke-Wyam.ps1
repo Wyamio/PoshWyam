@@ -1,3 +1,21 @@
+function Quote {
+    param(
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)]
+        [string[]]$text
+    )
+
+    process {
+        $text | ForEach-Object {
+            if ($_ -match '\s') {
+                "`"$_`""
+            }
+            else {
+                $_
+            }
+        }
+    }
+}
+
 <#
 .SYNOPSIS
     Invokes wyam.exe from the tools directory of the project.
@@ -5,112 +23,136 @@
     Invokes wyam.exe from the tools directory of the project.
 #>
 function Invoke-Wyam {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "Arguments")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingInvokeExpression")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock")]
     [CmdletBinding(DefaultParameterSetName='Build')]
     param (
-        [Parameter(ParameterSetName='Preview', Mandatory=$false, Position=0)]
+        [Parameter(ParameterSetName='Preview', Mandatory=$true)]
+        [switch]$PreviewOnly,
+
+        [Parameter(ParameterSetName='New', Mandatory=$true)]
+        [switch]$New,
+
+        # The folder (or config file) to use.
         [Parameter(ParameterSetName='Build', Mandatory=$false, Position=0)]
+        [Parameter(ParameterSetName='Preview', Mandatory=$false, Position=0)]
         [string]$Path,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$true)]
+        # Start the preview web server.
+        [Parameter(ParameterSetName='Build')]
         [switch]$Preview,
 
+        # The port to use for the preview web server.
+        [Parameter(ParameterSetName='Build', Mandatory=$false)]
         [Parameter(ParameterSetName='Preview', Mandatory=$false)]
         [int]$Port = 5080,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Watches the input folder for any changes.
+        [Parameter(ParameterSetName='Build')]
         [switch]$Watch,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Pause execution at the start of the program until a debugger is attached.
         [Parameter(ParameterSetName='Build')]
+        [Parameter(ParameterSetName='Preview')]
+        [Parameter(ParameterSetName='New')]
         [switch]$Attach,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Force the use of extensions in the preview web server (by default extensionless URLs may be used).
         [Parameter(ParameterSetName='Build')]
+        [Parameter(ParameterSetName='Preview')]
         [switch]$ForceExtensions,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Serve files in the preview web server under the specified virtual directory.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
+        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
         [string]$VirtualDirectory,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # The path to the root of the preview server, if not the output folder.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
         [string]$PreviewRoot,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # The path(s) of input files, can be absolute or relative to the current folder.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$InputPath,
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
+        [string[]]$InputPath,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # The path to the output files, can be absolute or relative to the current folder.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
         [string]$OutputPath,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # The path to the configuration file (by default, config.wyam is used).
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
         [string]$ConfigurationPath,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Check the NuGet server for more recent versions of each package and update them if applicable.
         [Parameter(ParameterSetName='Build')]
+        [Parameter(ParameterSetName='New')]
         [switch]$UpdatePackages,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Toggles the use of a local NuGet packages folder.
         [Parameter(ParameterSetName='Build')]
+        [Parameter(ParameterSetName='New')]
         [switch]$UseLocalPackages,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Toggles the use of the global NuGet sources (default is false).
         [Parameter(ParameterSetName='Build')]
+        [Parameter(ParameterSetName='New')]
         [switch]$UseGlobalSources,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # The packages path to use (only if use-local is true).
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
         [string]$PackagesPath,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Outputs the config script after it's been processed for further debugging.
         [Parameter(ParameterSetName='Build')]
         [switch]$OutputScript,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Compile the configuration but do not execute.
         [Parameter(ParameterSetName='Build')]
         [switch]$VerifyConfig,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Prevents cleaning of the output path on each execution.
         [Parameter(ParameterSetName='Build')]
         [switch]$NoClean,
 
-        [Parameter(ParameterSetName='Preview')]
+        # Prevents caching information during execution (less memory usage but slower execution).
         [Parameter(ParameterSetName='Build')]
         [switch]$NoCache,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Log all trace messages to the specified log file.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
         [string]$LogFilePath,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Specifies settings to use.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$GlobalMetadata,
+        [hashtable]$Setting,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Specifies an additional package source to use.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$InitialMetadata,
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
+        [string[]]$NuGetSource,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Specifies a recipe to use.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$NuGetSource,
-
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
-        [Parameter(ParameterSetName='Build', Mandatory=$false)]
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
         [string]$Recipe,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Adds an assembly reference by name, file name, or globbing pattern.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$Assembly,
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
+        [string[]]$Assembly,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Specifies a theme to use.
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
         [string]$Theme,
 
-        [Parameter(ParameterSetName='Preview', Mandatory=$false)]
+        # Adds a NuGet package (downloading and installing it if needed).
         [Parameter(ParameterSetName='Build', Mandatory=$false)]
-        [string]$NuGetPackage,
+        [Parameter(ParameterSetName='New', Mandatory=$false)]
+        [string[]]$NuGetPackage,
 
         # The arguments to pass to wyam.exe.
         [Parameter(Position=1, ParameterSetName='Args')]
@@ -118,10 +160,27 @@ function Invoke-Wyam {
     )
     
     begin {
-        if ($PSCmdlet.ParameterSetName -in @('Preview','Build')) {
+        if ($PSCmdlet.ParameterSetName -ne 'Args') {
             $Arguments = @()
+            switch ($PSCmdlet.ParameterSetName) {
+                'Build' {
+                    $Arguments += 'build'
+                }
+                'Preview' {
+                    $Arguments += 'preview'
+                }
+                'New' {
+                    $Arguments += 'new'
+                }
+            }
             if ($Preview) {
-                $Arguments += "-p $Port"
+                $Arguments += '-p'
+                if ($PSBoundParameters.ContainsKey('Port')) {
+                    $Arguments += $Port
+                }
+            }
+            if ($PreviewOnly -and $PSBoundParameters.ContainsKey('Port')) {
+                $Arguments += @('-p', $Port)
             }
             if ($Watch) {
                 $Arguments += '-w'
@@ -139,7 +198,9 @@ function Invoke-Wyam {
                 $Arguments += @('--preview-root', $PreviewRoot)
             }
             if ($PSBoundParameters.ContainsKey('InputPath')) {
-                $Arguments += @('-i', $InputPath)
+                $InputPath | ForEach-Object {
+                    $Arguments += @('-i', $_ | Quote)
+                }
             }
             if ($PSBoundParameters.ContainsKey('OutputPath')) {
                 $Arguments += @('-o', $OutputPath)
@@ -174,33 +235,38 @@ function Invoke-Wyam {
             if ($PSBoundParameters.ContainsKey('LogFilePath')) {
                 $Arguments += @('-l', $LogFilePath)
             }
-            if ($PSBoundParameters.ContainsKey('GlobalMetadata')) {
-                $Arguments += @('-g', $GlobalMetadata)
-            }
-            if ($PSBoundParameters.ContainsKey('InitialMetadata')) {
-                $Arguments += @('--initial', $InitialMetadata)
+            if ($PSBoundParameters.ContainsKey('Setting')) {
+                $Setting.GetEnumerator() | ForEach-Object {
+                    $Arguments += @('-s', "$($_.Key | Quote)=$($_.Value | Quote)")
+                }
             }
             if ($PSBoundParameters.ContainsKey('NuGetSource')) {
-                $Arguments += @('--ns', $NuGetSource)
+                $NuGetSource | ForEach-Object {
+                    $Arguments += @('--ns', $_ | Quote)
+                }
             }
             if ($PSBoundParameters.ContainsKey('Recipe')) {
                 $Arguments += @('-r', $Recipe)
             }
             if ($PSBoundParameters.ContainsKey('Assembly')) {
-                $Arguments += @('-a', $Assembly)
+                $Assembly | ForEach-Object {
+                    $Arguments += @('-a', $_ | Quote)
+                }
             }
             if ($PSBoundParameters.ContainsKey('Theme')) {
                 $Arguments += @('-t', $Theme)
             }
             if ($PSBoundParameters.ContainsKey('NuGetPackage')) {
-                $Arguments += @('-n', $NuGetPackage)
+                $NuGetPackage | ForEach-Object {
+                    $Arguments += @('-n', $_ | Quote)
+                }
             }
             if ($PSBoundParameters.ContainsKey('Path')) {
                 $Arguments += $Path
             }
         }
         if ([System.Management.Automation.ActionPreference]::SilentlyContinue -ne $VerbosePreference) {
-            $Arguments += '--verbose'
+            $Arguments += '-v'
         }
         Write-Verbose 'Invoke-Wyam: Finding tool.'
         try {
@@ -210,17 +276,13 @@ function Invoke-Wyam {
         if (-not $root) {
             $root = Join-Path $ModuleRoot 'Wyam'
         }
-        $tools = Join-Path $Root 'tools'
-        $wyam = Resolve-Path (Join-PathSegment $tools 'wyam','tools','wyam.exe')
-        Write-Verbose "Invoke-Wyam: Tool located at '$wyam'"
-        $quoted = $Arguments | ForEach-Object {
-            if ($_ -contains '\s') {
-                "`"$_`""
-            }
-            else {
-                $_
-            }
+        $wyam = Join-PathSegment $Root 'tools','wyam','tools','wyam.exe'
+        if (-not (Test-Path $wyam)) {
+            $wyam = Join-PathSegment $ModuleRoot 'wyam','tools','wyam.exe'
         }
+        $wyam = Resolve-Path $wyam
+        Write-Verbose "Invoke-Wyam: Tool located at '$wyam'"
+        $quoted = $Arguments | Quote
         $Arguments = ($quoted) -join ' '
     }
     
@@ -235,8 +297,5 @@ function Invoke-Wyam {
     }
     
     end {
-        if ($temp) {
-            Remove-Item -Path $temp -Recurse -Force
-        }
     }
 }
