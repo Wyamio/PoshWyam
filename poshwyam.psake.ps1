@@ -52,11 +52,6 @@ Task Test -Depends Build {
     }
 }
 
-Task Import -Depends Build {
-    Write-Host "Importing module"
-    import-module '.\output\PoshWyam\PoshWyam.psd1' -Force
-}
-
 Task Install -Depends Build {
     Write-Host "Installing to $InstallDir"
     if ((-not $InstallDir) -or (-not (Test-Path $InstallDir))) {
