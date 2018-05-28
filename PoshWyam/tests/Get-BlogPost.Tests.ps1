@@ -1,14 +1,14 @@
 ﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 Import-Module "$here\..\PoshWyam.psd1" -Force
 
+$published = [DateTime]("$(Get-Date)") # Format/Parse round trip may not be exact
+$published = $published - [TimeSpan]::FromDays(2)
+$post = "TestDrive:\input\posts\test-post.md"
+
 Describe "Get-BlogPost" {
     BeforeAll {
-        $published = [DateTime]("$(Get-Date)") # Format/Parse round trip may not be exact
-        $published = $published - [TimeSpan]::FromDays(2)
-
         # Setup minimal amount of directory structure to test
         [void](New-Item -Path "TestDrive:\config.wyam" -ItemType File)
-        $post = "TestDrive:\input\posts\test-post.md"
         [void](New-Item -Path $post -ItemType File -Force)
         Set-Content -Path $post -Value @"
 ---

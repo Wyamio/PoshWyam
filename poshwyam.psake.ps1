@@ -1,5 +1,5 @@
 properties {
-    $Develop = [bool]::Parse($dev)
+    $Develop = [bool]::Parse($(if ($dev) { $dev } else { 'false' }))
 }
 
 FormatTaskName @"
@@ -13,19 +13,24 @@ Task default -Depends Test
 Task Clean {
     if ($Develop) {
         Write-Host "Cleaning '.\output\PoshWyam\'."
-        Get-ChildItem -Path 'output/PoshWyam' -Exclude 'Wyam','lib' | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path 'output/PoshWyam') {
+            Get-ChildItem -Path 'output/PoshWyam' -Exclude 'Wyam','lib' | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        }
     } else {
         Write-Host "Cleaning '.\output\'."
-        Get-ChildItem -Path 'output' | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path 'output') {
+            Get-ChildItem -Path 'output' | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
 Task Build -Depends Clean {
+    [void](New-Item -Path 'output' -ItemType Directory -ErrorAction SilentlyContinue)
     Write-Host "Copying script files."
     [void](Copy-Item -Path 'PoshWyam' -Destination 'output' -Recurse -Force)
 
-    EnsureModule -Name 'PSScriptAnalyzer'
-    Write-Host "Analyzing scripts."
+    #EnsureModule -Name 'PSScriptAnalyzer'
+    #Write-Host "Analyzing scripts."
     #$violations = Invoke-ScriptAnalyzer -Path "$PSScriptRoot/output/PoshWyam"
     #if (@($violations).Count -gt 0) {
     #    $violations
@@ -34,16 +39,23 @@ Task Build -Depends Clean {
 
     if (-not $Develop) {
         EnsureNuGet -Name 'Wyam' -Destination 'output/PoshWyam'
-
         EnsureNuGet -Name 'YamlDotNet'
-        $lib = Get-ChildItem -Include 'portable*' -Path 'output/YamlDotNet/lib' -Recurse
+        $lib = Get-ChildItem -Include 'netstandard*' -Path 'output/YamlDotNet/lib' -Recurse | Select-Object -First 1
+        if (-not (Test-Path $lib)) {
+            throw "Unable to locate YamlDotNet binaries."
+        }
         [void](New-Item -Name 'lib' -Path 'output/PoshWyam' -ItemType Directory -ErrorAction SilentlyContinue)
-        [void](Copy-Item -Path (Join-Path $lib '*') 'output/PoshWyam/lib' -ErrorAction SilentlyContinue)
+        try {
+            [void](Copy-Item -Path (Join-Path $lib '*') 'output/PoshWyam/lib' -ErrorAction SilentlyContinue)
+        } catch {
+        }
     }
 }
 
 Task Test -Depends Build {
-    EnsureModule 'Pester'
+    if (-not (Get-Command Invoke-Pester)) {
+        throw "Pester is not installed."
+    }
     Push-Location 'output/PoshWyam'
     try {
         Invoke-Pester
@@ -99,22 +111,21 @@ function EnsureNuGet {
         $Destination = "output"
     }
 
-    Write-Host "Finding NuGet.exe."
-    $nuget = Join-Path (Join-Path $PSScriptRoot 'tools') 'nuget.exe'
+    $tools = Join-Path $PSScriptRoot 'tools'
+    $nuget = Join-Path $tools 'nuget.exe'
     if (-not (Test-Path $nuget)) {
-        $nuget = (Get-Command -Name 'nuget.exe' -ErrorAction SilentlyContinue).Source
-        if (-not $nuget) {
-            Write-Host "Installing NuGet.exe"
-            $nuget = Join-Path (Join-Path $PSScriptRoot 'tools') 'nuget.exe'
-            try {
-                (New-Object System.Net.WebClient).DownloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", $nuget)
-            } catch {
-                Throw "Could not download NuGet.exe."
+        Write-Host "Installing NuGet.exe"
+        try {
+            if (-not (Test-Path $tools)) {
+                [void](New-Item -ItemType Directory -Path $tools)
             }
+            (New-Object System.Net.WebClient).DownloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", $nuget)
+        } catch {
+            Throw "Could not download NuGet.exe."
         }
     }
     $nuget = Resolve-Path $nuget
-    Write-Host "Using '$nuget'."
+    Write-Verbose "Using '$nuget'."
 
     Write-Host "Installing $Name."
     & "$nuget" install $Name -Prerelease -ExcludeVersion -OutputDirectory $Destination
