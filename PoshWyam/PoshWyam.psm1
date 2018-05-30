@@ -1,18 +1,14 @@
 $ModuleRoot = $PSScriptRoot
 
-# Public cmdlets
-. $ModuleRoot\Get-BlogPost.ps1
-. $ModuleRoot\Get-BlogPostsLocation.ps1
-. $ModuleRoot\Get-WyamRoot.ps1
-. $ModuleRoot\Invoke-Wyam.ps1
-. $ModuleRoot\New-Blog.ps1
-. $ModuleRoot\New-BlogPost.ps1
-#. $ModuleRoot\Set-BlogPostPublishedDate.ps1
-. $ModuleRoot\Publish-BlogDraft.ps1
+$public = @(Get-ChildItem -Path $ModuleRoot\Public\*.ps1 -ErrorAction SilentlyContinue)
+$private = @(Get-ChildItem -Path $ModuleRoot\Private\*.ps1 -ErrorAction SilentlyContinue)
+foreach ($import in @($public + $private)) {
+    try {
+        . $import.FullName
+    }
+    catch {
+        Write-Error -Message "Failed to import script $($import.FullName): $_"
+    }
+}
 
-# Private cmdlets
-. $ModuleRoot\Get-BlogObject.ps1
-. $ModuleRoot\Get-BlogPostName.ps1
-. $ModuleRoot\Join-PathSegment.ps1
-. $ModuleRoot\Test-Any.ps1
-. $ModuleRoot\Yaml.ps1
+Export-ModuleMember -Function $Public.BaseName

@@ -1,5 +1,4 @@
-﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-Import-Module "$here\..\PoshWyam.psd1" -Force
+﻿Import-Module "$Artifacts\PoshWyam\PoshWyam.psd1" -Force
 
 InModuleScope PoshWyam {
     $published = [DateTime]("$(Get-Date)") # Format/Parse round trip may not be exact
@@ -23,7 +22,6 @@ Lorem ipsum.
 "@
         }
         It "returns a valid PoshWyam.BlogPost" {
-            Write-Host "Path: $post"
             $result = Get-BlogObject -Path $post
 
             $result.PSObject.TypeNames[0] | Should be PoshWyam.BlogPost

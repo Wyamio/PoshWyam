@@ -1,21 +1,3 @@
-function Quote {
-    param(
-        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)]
-        [string[]]$text
-    )
-
-    process {
-        $text | ForEach-Object {
-            if ($_ -match '\s') {
-                "`"$_`""
-            }
-            else {
-                $_
-            }
-        }
-    }
-}
-
 <#
 .SYNOPSIS
     Invokes wyam.exe from the tools directory of the project.
@@ -23,9 +5,6 @@ function Quote {
     Invokes wyam.exe from the tools directory of the project.
 #>
 function Invoke-Wyam {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "Arguments")]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingInvokeExpression")]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock")]
     [CmdletBinding(DefaultParameterSetName='Build')]
     param (
         [Parameter(ParameterSetName='Preview', Mandatory=$true)]
@@ -158,7 +137,7 @@ function Invoke-Wyam {
         [Parameter(Position=1, ParameterSetName='Args')]
         [string[]]$Arguments
     )
-    
+
     begin {
         if ($PSCmdlet.ParameterSetName -ne 'Args') {
             $Arguments = @()
@@ -270,22 +249,18 @@ function Invoke-Wyam {
         }
         Write-Verbose 'Invoke-Wyam: Finding tool.'
         try {
-            $root = Get-WyamRoot
+            $root = Join-Path (Get-WyamRoot) 'tools'
         } catch {
         }
-        if (-not $root) {
+        if (-not $root -or -not (Test-Path $root)) {
             $root = Join-Path $ModuleRoot 'Wyam'
         }
-        $wyam = Join-PathSegment $Root 'tools','wyam','tools','wyam.exe'
-        if (-not (Test-Path $wyam)) {
-            $wyam = Join-PathSegment $ModuleRoot 'wyam','tools','wyam.exe'
-        }
+        $wyam = Get-ChildItem -Path $root -Include wyam.exe -Recurse | Select-Object -First 1
         $wyam = Resolve-Path $wyam
         Write-Verbose "Invoke-Wyam: Tool located at '$wyam'"
-        $quoted = $Arguments | Quote
-        $Arguments = ($quoted) -join ' '
+        $Arguments = ($Arguments | Quote) -join ' '
     }
-    
+
     process {
         if (-not (Test-Path $wyam)) {
             Install-Wyam -Root $root
@@ -295,7 +270,7 @@ function Invoke-Wyam {
         Write-Verbose "Invoke-Wyam: Running command '$expr'"
         Invoke-Expression $expr
     }
-    
+
     end {
     }
 }

@@ -23,7 +23,7 @@ function New-Blog {
         [Parameter(Mandatory = $False)]
         $Description,
 
-        # A short introduction to your blog (usually placed on the home page under the description). 
+        # A short introduction to your blog (usually placed on the home page under the description).
         [Parameter(Mandatory = $False)]
         $Introduction,
 
@@ -33,10 +33,10 @@ function New-Blog {
 
         [switch]$CakeBuild
     )
-    
+
     begin {
     }
-    
+
     process {
         if (-not $PSBoundParameters.ContainsKey('Path')) {
             $Path = Join-Path (Get-Location) (Get-FileName $Title)
@@ -52,16 +52,16 @@ function New-Blog {
 
         Invoke-Wyam -New -Recipe Blog
         [void](New-Item -Path (Join-Path $Path drafts) -ItemType Directory)
-        
+
         # Update config.wyam
-        $content = @("`n#theme $Theme", "Settings[Keys.Host] = `"$Host`";", "Settings[BlogKeys.Title] = `"$Title`";")
+        $content = @("#recipe Blog", "#theme $Theme", "Settings[Keys.Host] = `"$Host`";", "Settings[BlogKeys.Title] = `"$Title`";")
         if ($Description) {
             $content += "Settings[BlogKeys.Description] = `"$Description`";"
         }
         if ($Introduction) {
             $content += "Settings[BlogKeys.Intro] = `"$Introduction`";"
         }
-        Add-Content -Path config.wyam -Value $content
+        Set-Content -Path config.wyam -Value $content
 
         if ($CakeBuild) {
             # Create build.ps1
@@ -72,7 +72,7 @@ function New-Blog {
             Set-Content -Path wyam.cake -Value (Get-Content -Path (Join-Path $ModuleRoot wyam.cake) | ForEach-Object { $_ -replace '%THEME%',$Theme })
         }
     }
-    
+
     end {
     }
 }

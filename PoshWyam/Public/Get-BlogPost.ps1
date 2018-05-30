@@ -1,7 +1,6 @@
 <#
 .SYNOPSIS
     Gets the blog posts in a Wyam blog.
-
 .DESCRIPTION
     Gets the blog posts in a Wyam blog. Posts are assumed to be located in ./input/posts and drafts in ./drafts.
 #>
@@ -28,10 +27,10 @@ function Get-BlogPost {
         [string]
         $Root = (Get-WyamRoot)
     )
-    
+
     begin {
     }
-    
+
     process {
         @(
             Get-ChildItem -Path (Get-BlogPostsLocation) -Filter *.md | Get-BlogObject
@@ -49,7 +48,7 @@ function Get-BlogPost {
             }
         } | Sort-Object Published
     }
-    
+
     end {
     }
 }

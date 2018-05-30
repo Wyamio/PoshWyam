@@ -1,5 +1,4 @@
-﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-Import-Module "$here\..\PoshWyam.psd1" -Force
+﻿Import-Module "$Artifacts\PoshWyam\PoshWyam.psd1" -Force
 
 $published = [DateTime]("$(Get-Date)") # Format/Parse round trip may not be exact
 $published = $published - [TimeSpan]::FromDays(2)
@@ -51,21 +50,21 @@ Lorem ipsum.
         It "returns items in Published order" {
             $result = Get-BlogPost
 
-            ($result | ForEach-Object { $_.Draft }) | Should be @($True, $False)
+            @($result | ForEach-Object { $_.Draft }) | Should be @($True, $False)
         }
     }
     Context "with -Title" {
         It "returns correct posts" {
             $result = Get-BlogPost -Title "Test Post"
 
-            ($result | ForEach-Object { $_.Draft }) | Should be @($False)
+            @($result | ForEach-Object { $_.Draft }) | Should be @($False)
         }
     }
     Context "with positional parameter" {
         It "returns correct posts" {
             $result = Get-BlogPost "Test Post"
 
-            ($result | ForEach-Object { $_.Draft }) | Should be @($False)
+            @($result | ForEach-Object { $_.Draft }) | Should be @($False)
         }
     }
     Context "with wildcards in -Title" {
